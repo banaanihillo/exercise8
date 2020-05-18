@@ -1,0 +1,24 @@
+{
+  "name": "exercise8",
+  "version": "1.0.0",
+  "description": "Exercise 8 of Full Stack Open",
+  "main": "bookthing.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+	"playground": "node bookthing.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/banaanihillo/exercise8.git"
+  },
+  "author": "banaanihillo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/banaanihillo/exercise8/issues"
+  },
+  "homepage": "https://github.com/banaanihillo/exercise8#readme",
+  "dependencies": {
+    "apollo-server": "^2.13.1",
+    "graphql": "^15.0.0"
+  }
+}
