@@ -19,7 +19,8 @@
   "homepage": "https://github.com/banaanihillo/exercise8#readme",
   "dependencies": {
     "apollo-server": "^2.13.1",
-    "graphql": "^15.0.0"
+    "graphql": "^15.0.0",
+    "uuid": "^8.0.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"
