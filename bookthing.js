@@ -1,6 +1,6 @@
 const {ApolloServer, gql} = require("apollo-server")
 
-const authors = [
+let authors = [
     {
         name: "Robert Martin",
         id: "aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbb",
@@ -26,7 +26,7 @@ const authors = [
     }
 ]
 
-const books = [
+let books = [
     {
         title: "Clean Code",
         published: 2008,
@@ -113,7 +113,7 @@ const typeDefs = gql`
     type Query {
         bookCount: Int
         authorCount: Int
-        allBooks(author: String): [Book],
+        allBooks(author: String, genre: String): [Book],
         allAuthors: [Author]
     }
 `
@@ -122,6 +122,11 @@ const resolvers = {
         bookCount: () => books.length,
         authorCount: () => authors.length,
         allBooks: (_root, args) => {
+            if (args.genre) {
+                books = books.filter(book => {
+                    return book.genres.includes(args.genre.toLowerCase())
+                })
+            }
             if (books.find(book => book.author === args.author)) {
                 return books.filter(book => book.author === args.author)
             } else {
