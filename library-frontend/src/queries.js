@@ -94,3 +94,18 @@ export const EDIT_NUMBER = GraphQL`
         }
     }
 `
+
+export const EDIT_AUTHOR = GraphQL`
+    mutation editAuthor(
+        $name: String,
+        $setBornTo: Int
+    ) {
+        editAuthor(
+            name: $name,
+            setBornTo: $setBornTo
+        ) {
+            name
+            born
+        }
+    }
+`
