@@ -11,6 +11,17 @@ export const ALL_AUTHORS = GraphQL`
     }
 `
 
+export const ALL_BOOKS = GraphQL`
+    query {
+        allBooks {
+            title
+            published
+            author
+            id
+        }
+    }
+`
+
 export const FIND_AUTHOR = GraphQL`
     query findAuthorByName($nameToSearch: String) {
         findAuthor(name: $nameToSearch) {
