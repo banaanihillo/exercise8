@@ -46,7 +46,7 @@ const Authors = (props) => {
             <div> Still in the midst of some stuff here </div>
         )
     }
-    
+
     return (
         <div>
             <h2> Authors </h2>
@@ -74,14 +74,18 @@ const Authors = (props) => {
             <h3> Edit authors here </h3>
             <form onSubmit = {handleSubmit}>
                 Author name:
-                <input
-                    type = {name}
-                    onChange = {({target}) => setName(target.value)}
-                />
+                <select value = {name} onChange = {({target}) => setName(target.value)}>
+                    {authors.map(author =>
+                        <option key = {author.id} value = {author.name}>
+                            {author.name}
+                        </option>
+                    )}
+                </select>
                 <br />
                 Birth year:
                 <input
-                    type = {birthYear}
+                    type = "number"
+                    value = {birthYear}
                     onChange = {({target}) => setBirthYear(Number(target.value))}
                 />
                 <br />
