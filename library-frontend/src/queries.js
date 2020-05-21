@@ -22,6 +22,27 @@ export const ALL_BOOKS = GraphQL`
     }
 `
 
+export const CREATE_BOOK = GraphQL`
+    mutation createBook(
+        $title: String,
+        $author: String,
+        $published: Int,
+        $genres: [String]
+    ) {
+        addBook (
+            title: $title
+            author: $author
+            published: $published
+            genres: $genres
+        ) {
+            title
+            author
+            published
+            genres
+        }
+    }
+`
+
 export const FIND_AUTHOR = GraphQL`
     query findAuthorByName($nameToSearch: String) {
         findAuthor(name: $nameToSearch) {

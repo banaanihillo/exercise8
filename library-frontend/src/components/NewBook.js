@@ -1,4 +1,6 @@
 import React, {useState} from "react"
+import {CREATE_BOOK, ALL_BOOKS, ALL_AUTHORS} from "../queries"
+import {useMutation} from "@apollo/client"
 
 const NewBook = (props) => {
     const {showPage} = props
@@ -7,19 +9,38 @@ const NewBook = (props) => {
     const [published, setPublished] = useState("")
     const [genre, setGenre] = useState("")
     const [genres, setGenres] = useState([])
-    
-    if (!showPage) {
-        return null
-    }
+
+    const [createBook] = useMutation(CREATE_BOOK, {
+        refetchQueries: [
+            {
+                query: ALL_BOOKS
+            },
+            {
+                query: ALL_AUTHORS
+            }
+        ]
+    })
 
     const handleSubmit = async (event) => {
         event.preventDefault()
+        createBook({
+            variables: {
+                title,
+                author,
+                published,
+                genres
+            }
+        })
         setTitle(""); setPublished(""); setAuthor(""); setGenres([]); setGenre("")
     }
     
     const addGenre = () => {
         setGenres(genres.concat(genre))
         setGenre("")
+    }
+
+    if (!showPage) {
+        return null
     }
     
     return (
@@ -44,11 +65,11 @@ const NewBook = (props) => {
                     <input
                         type = "number"
                         value = {published}
-                        onChange={({target}) => setPublished(target.value)}
+                        onChange={({target}) => setPublished(Number(target.value))}
                     />
                 </div>
                 <div>
-                    Genre:
+                    Genres:
                     <input
                         value = {genre}
                         onChange={({target}) => setGenre(target.value)}
@@ -59,7 +80,7 @@ const NewBook = (props) => {
                 </div>
 
                 <div>
-                    Genres: {genres.join(" ")}
+                    Genres added: {genres.join(", ")}
                 </div>
 
                 <button type = "submit">
