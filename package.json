@@ -19,7 +19,10 @@
   "homepage": "https://github.com/banaanihillo/exercise8#readme",
   "dependencies": {
     "apollo-server": "^2.13.1",
+    "dotenv": "^8.2.0",
     "graphql": "^15.0.0",
+    "mongoose": "^5.9.15",
+    "mongoose-unique-validator": "^2.0.3",
     "uuid": "^8.0.0"
   },
   "devDependencies": {
