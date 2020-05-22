@@ -1,5 +1,23 @@
-const {v4: uniqueID} = require("uuid")
+//const {v4: uniqueID} = require("uuid")
 const {ApolloServer, gql} = require("apollo-server")
+require("dotenv").config()
+
+const mongoose = require("mongoose")
+const Author = require("./models/authorSchema")
+const Book = require("./models/bookSchema")
+mongoose.set("useFindAndModify", false)
+const mongoAddress = process.env.MONGODB_URI
+mongoose.connect(mongoAddress, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true
+})
+    .then(() => {
+        console.log("Successfully connected to Mongo")
+    })
+    .catch((error) => {
+        console.log(`Could not connect to Mongo: ${error}`)
+    })
 
 let authors = [
     {
@@ -136,9 +154,10 @@ const typeDefs = gql`
 `
 const resolvers = {
     Query: {
-        bookCount: () => books.length,
-        authorCount: () => authors.length,
-        allBooks: (_root, args) => {
+        bookCount: () => Book.collection.countDocuments(),
+        authorCount: () => Author.collection.countDocuments(),
+        allBooks: (_root, _args) => {
+            /*
             if (args.genre) {
                 books = books.filter(book => {
                     return book.genres.includes(args.genre.toLowerCase())
@@ -147,41 +166,41 @@ const resolvers = {
             if (books.find(book => book.author === args.author)) {
                 return books.filter(book => book.author === args.author)
             } else {
-                return books
-            }
+                return Book.find({})
+            }*/
+            return Book.find({})
         },
-        allAuthors: () => authors
+        allAuthors: () => Author.find({})
     },
     Author: {
         bookCount: (root) => books.filter(book => book.author === root.name).length
     },
     Mutation: {
         addAuthor: (_root, args) => {
-            const author = {...args, id: uniqueID()}
-            authors = authors.concat(author)
-            return author
+            const author = new Author({...args})
+            return author.save()
         },
         addBook: (_root, args) => {
-            if (!books.find(book => book.author === args.author)) {
-                const author = {name: args.author, bookCount: 1, id: uniqueID()}
-                authors = authors.concat(author)
-            }
-            const book = {...args, id: uniqueID()}
-            books = books.concat(book)
-            return book
+            /*
+            Book.find({author: args.author})
+                .then(() =>
+                    console.log("Yup, this author already exists")
+                )
+                .catch(() => {
+                    const author = new Author({name: args.author, bookCount: 1})
+                    return author.save()
+                })
+            */
+            const book = new Book({...args})
+            return book.save()
         },
-        editAuthor: (_root, args) => {
+        editAuthor: async (_root, args) => {
             if (!authors.find(author => author.name === args.name)) {
                 return null
             } else {
-                const findAuthor = authors.find(author => author.name === args.name)
-                const authorToModify = {...findAuthor, born: args.setBornTo}
-                authors = authors.map(author =>
-                    (author.name === args.name)
-                        ? authorToModify
-                        : author
-                )
-                return authorToModify
+                const author = await Author.findOne({name: args.name})
+                author.born = args.setBornTo
+                return author.save()
             }
         }
     }
@@ -192,6 +211,6 @@ const server = new ApolloServer({
     resolvers
 })
 
-server.listen().then(({address}) => {
-    console.log(`The server is ready at ${address}, I think?`)
+server.listen().then(() => {
+    console.log("The server is running somewhere")
 })
