@@ -3,7 +3,7 @@ import {ALL_AUTHORS, EDIT_AUTHOR, ALL_BOOKS} from "../queries"
 import {useQuery, useMutation} from "@apollo/client"
 
 const Authors = (props) => {
-    const {showPage} = props
+    const {showPage, setErrorMessage} = props
     const result = useQuery(ALL_AUTHORS)
     const [authors, setAuthors] = useState([])
     const [name, setName] = useState("")
@@ -25,7 +25,13 @@ const Authors = (props) => {
             {
                 query: ALL_BOOKS
             }
-        ]
+        ],
+        onError: (error) => {
+            setErrorMessage(error.graphQLErrors[0].message)
+            setTimeout(() => {
+                setErrorMessage(null)
+            }, 5000)
+        }
     })
 
     const handleSubmit = (event) => {
@@ -77,7 +83,11 @@ const Authors = (props) => {
             <h3> Edit authors here </h3>
             <form onSubmit = {handleSubmit}>
                 Author name:
-                <select value = {name} onChange = {({target}) => setName(target.value)}>
+                <select
+                    value = {name}
+                    onChange = {({target}) => setName(target.value)
+                }>
+                    <option value = "" disabled hidden> Select a name </option>
                     {authors.map(author =>
                         <option key = {author.id} value = {author.name}>
                             {author.name}

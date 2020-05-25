@@ -1,5 +1,4 @@
-//const {v4: uniqueID} = require("uuid")
-const {ApolloServer, gql} = require("apollo-server")
+const {ApolloServer, gql, UserInputError} = require("apollo-server")
 require("dotenv").config()
 
 const mongoose = require("mongoose")
@@ -18,21 +17,14 @@ mongoose.connect(mongoAddress, {
     .catch((error) => {
         console.log(`Could not connect to Mongo: ${error}`)
     })
-   
-    
-
-
-
-
-
-
+//
 const typeDefs = gql`
     type Book {
-        title: String
-        published: Int
-        author: Author
-        id: ID
-        genres: [String]
+        title: String!
+        published: Int!
+        author: Author!
+        id: ID!
+        genres: [String!]!
     }
     type Author {
         name: String
@@ -95,16 +87,19 @@ const resolvers = {
         }
     },
     Mutation: {
-        addAuthor: (_root, args) => {
+        addAuthor: async (_root, args) => {
             const author = new Author({
                 name: args.name,
-                born: null,
-                _id: new mongoose.Types.ObjectId()
+                born: null
             })
-            return author.save()
-                .catch(error => {
-                    console.log(error)
+            try {
+                await author.save()
+            } catch (error) {
+                throw new UserInputError(error.message, {
+                    invalidArgs: args
                 })
+            }
+            return author
         },
         addBook: async (_root, args) => {
             const author = await Author.findOne({name: args.name})
@@ -112,16 +107,23 @@ const resolvers = {
                 title: args.title,
                 published: args.published,
                 genres: args.genres,
-                author: author._id
+                author: author.id
             })
-
-            return book.save()
+            try {
+                await book.save()
+            } catch (error) {
+                throw new UserInputError(error.message, {
+                    invalidArgs: args
+                })
+            }
+            return book
         },
         editAuthor: async (_root, args) => {
             const author = await Author.findOne({name: args.name})
             if (!author) {
-                console.log("Nothin' here")
-                return null
+                throw new UserInputError(
+                    "Select a name first"
+                )
             }
             author.born = args.setBornTo
             return author.save()

@@ -3,7 +3,7 @@ import {CREATE_BOOK, ALL_BOOKS, ALL_AUTHORS, CREATE_AUTHOR} from "../queries"
 import {useMutation, useQuery} from "@apollo/client"
 
 const NewBook = (props) => {
-    const {showPage} = props
+    const {showPage, setErrorMessage} = props
     const [title, setTitle] = useState("")
     const [name, setName] = useState("")
     const [published, setPublished] = useState("")
@@ -28,14 +28,35 @@ const NewBook = (props) => {
             {
                 query: ALL_AUTHORS
             }
-        ]
+        ],
+        onError: (error) => {
+            setErrorMessage(error.graphQLErrors[0].message)
+            setTimeout(() => {
+                setErrorMessage(null)
+            }, 8000)
+        }
     })
 
-    const [createAuthor] = useMutation(CREATE_AUTHOR)
+    const [createAuthor] = useMutation(CREATE_AUTHOR, {
+        refetchQueries: [
+            {
+                query: ALL_AUTHORS
+            },
+            {
+                query: ALL_BOOKS
+            }
+        ],
+        onError: (error) => {
+            setErrorMessage(error.graphQLErrors[0].message)
+            setTimeout(() => {
+                setErrorMessage(null)
+            }, 6000)
+        }
+    })
 
     const handleSubmit = async (event) => {
         event.preventDefault()
-        if (!(authors.includes(name))) {
+        if (!(authors.some(author => author.name === name))) {
             await createAuthor({
                 variables: {
                     name: name
