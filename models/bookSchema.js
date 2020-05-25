@@ -5,17 +5,16 @@ const bookSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        minLength: 2
+        minlength: 2
     },
     published: {
         type: Number
     },
     author: {
-        /*
+        //
         type: mongoose.Schema.Types.ObjectId,
         ref: "Author"
-        */
-       type: String
+        //
     },
     genres: [
         {

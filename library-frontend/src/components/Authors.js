@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react"
-import {ALL_AUTHORS, EDIT_AUTHOR} from "../queries"
+import {ALL_AUTHORS, EDIT_AUTHOR, ALL_BOOKS} from "../queries"
 import {useQuery, useMutation} from "@apollo/client"
 
 const Authors = (props) => {
@@ -21,6 +21,9 @@ const Authors = (props) => {
         refetchQueries: [
             {
                 query: ALL_AUTHORS
+            },
+            {
+                query: ALL_BOOKS
             }
         ]
     })

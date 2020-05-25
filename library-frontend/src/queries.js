@@ -16,7 +16,11 @@ export const ALL_BOOKS = GraphQL`
         allBooks {
             title
             published
-            author
+            author {
+                name
+                born
+                bookCount
+            }
             id
         }
     }
@@ -25,20 +29,20 @@ export const ALL_BOOKS = GraphQL`
 export const CREATE_BOOK = GraphQL`
     mutation createBook(
         $title: String,
-        $author: String,
+        $name: String,
         $published: Int,
         $genres: [String]
     ) {
-        addBook (
-            title: $title
-            author: $author
-            published: $published
+        addBook(
+            title: $title,
+            name: $name,
+            published: $published,
             genres: $genres
         ) {
-            title
-            author
-            published
-            genres
+            title,
+            published,
+            genres,
+            id
         }
     }
 `
@@ -58,25 +62,13 @@ export const FIND_AUTHOR = GraphQL`
 `
 
 export const CREATE_AUTHOR = GraphQL`
-    mutation createAuthor(
-        $name: String,
-        $street: String,
-        $city: String,
-        $phone: String
-    ) {
+    mutation createAuthor($name: String) {
         addAuthor(
-            name: $name,
-            street: $street,
-            city: $city,
-            phone: $phone
+            name: $name
         ) {
-            name
-            phone
-            id
-            address {
-                street
-                city
-            }
+            name,
+            id,
+            born
         }
     }
 `

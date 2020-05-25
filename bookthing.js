@@ -18,108 +18,19 @@ mongoose.connect(mongoAddress, {
     .catch((error) => {
         console.log(`Could not connect to Mongo: ${error}`)
     })
+   
+    
 
-let authors = [
-    {
-        name: "Robert Martin",
-        id: "aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbb",
-        born: 1952
-    },
-    {
-        name: "Martin Fowler",
-        id: "758972057792dyauf785209752",
-        born: 1963
-    },
-    {
-        name: "Fyodor Dostoyevski",
-        id: "097673908673890752897529d8925758290",
-        born: 1821
-    },
-    {
-        name: "Joshua Kerievsky",
-        id: "d7d76d6d67d6d6d6d798d678d6d"
-    },
-    {
-        name: "Sandi Metz",
-        id: "a888888888888888888a7686a77aaaa"
-    }
-]
 
-let books = [
-    {
-        title: "Clean Code",
-        published: 2008,
-        author: "Robert Martin",
-        id: "a7a7a7a7a7a7a7a7a7a7a",
-        genres: [
-            "refactoring"
-        ]
-    },
-    {
-        title: "Agile Software Development",
-        published: 2002,
-        author: "Robert Martin",
-        id: "abbb8888888e88e8e8e8",
-        genres: [
-            "agile",
-            "patterns",
-            "design"
-        ]
-    },
-    {
-        title: "Refactoring, edition 2",
-        published: 2018,
-        author: "Martin Fowler",
-        id: "88947025209757",
-        genres: [
-            "refactoring"
-        ]
-    },
-    {
-        title: "Refactoring to patterns",
-        published: 2008,
-        author: "Joshua Kerievsky",
-        id: "98989898988898797a787a77a",
-        genres: [
-            "refactoring",
-            "patterns"
-        ]
-    },
-    {
-        title: "Practical Object-Oriented Design, an Agile Primer Using Ruby",
-        published: 2012,
-        author: "Sandi Metz",
-        id: "10928202890282820982829289282892",
-        genres: [
-            "refactoring",
-            "design"
-        ]
-    },
-    {
-        title: "Crime and Punishment",
-        published: 1866,
-        author: "Fyodor Dostoyevski",
-        id: "785678262y276461063171d617631a",
-        genres: [
-            "crime"
-        ]
-    },
-    {
-        title: "The Demon",
-        published: 1872,
-        author: "Fyodor Dostoyevski",
-        id: "5555555a555555b5555555555b55555555a555555a35343a3",
-        genres: [
-            "revolution"
-        ]
-    }
-]
+
+
+
 
 const typeDefs = gql`
     type Book {
         title: String
         published: Int
-        author: String
+        author: Author
         id: ID
         genres: [String]
     }
@@ -138,7 +49,7 @@ const typeDefs = gql`
     type Mutation {
         addBook(
             title: String
-            author: String
+            name: String
             published: Int
             genres: [String]
         ): Book
@@ -156,55 +67,68 @@ const resolvers = {
     Query: {
         bookCount: () => Book.collection.countDocuments(),
         authorCount: () => Author.collection.countDocuments(),
-        allBooks: (_root, _args) => {
-            /*
+        allBooks: (_root, args) => {
             if (args.genre) {
-                books = books.filter(book => {
-                    return book.genres.includes(args.genre.toLowerCase())
-                })
-            }
-            if (books.find(book => book.author === args.author)) {
-                return books.filter(book => book.author === args.author)
-            } else {
-                return Book.find({})
+                return Book.find({genres: {$in: args.genre}})
+            }/*
+            if (args.author) {
+                return Book.find({author: {$in: args.author}})
             }*/
             return Book.find({})
         },
         allAuthors: () => Author.find({})
     },
+    Book: {
+        author: async (root) => {
+            const authorObject = await Author.findOne({_id: root.author})
+            return {
+                name: authorObject.name,
+                born: authorObject.born,
+                _id: authorObject._id
+            }
+        }
+    },
     Author: {
-        bookCount: (root) => books.filter(book => book.author === root.name).length
+        bookCount: async (root) => {
+            const books = await Book.find({author: root._id})
+            return books.length
+        }
     },
     Mutation: {
         addAuthor: (_root, args) => {
-            const author = new Author({...args})
+            const author = new Author({
+                name: args.name,
+                born: null,
+                _id: new mongoose.Types.ObjectId()
+            })
             return author.save()
-        },
-        addBook: (_root, args) => {
-            /*
-            Book.find({author: args.author})
-                .then(() =>
-                    console.log("Yup, this author already exists")
-                )
-                .catch(() => {
-                    const author = new Author({name: args.author, bookCount: 1})
-                    return author.save()
+                .catch(error => {
+                    console.log(error)
                 })
-            */
-            const book = new Book({...args})
+        },
+        addBook: async (_root, args) => {
+            const author = await Author.findOne({name: args.name})
+            let book = new Book({
+                title: args.title,
+                published: args.published,
+                genres: args.genres,
+                author: author._id
+            })
+
             return book.save()
         },
         editAuthor: async (_root, args) => {
-            if (!authors.find(author => author.name === args.name)) {
+            const author = await Author.findOne({name: args.name})
+            if (!author) {
+                console.log("Nothin' here")
                 return null
-            } else {
-                const author = await Author.findOne({name: args.name})
-                author.born = args.setBornTo
-                return author.save()
             }
+            author.born = args.setBornTo
+            return author.save()
         }
     }
 }
+
 
 const server = new ApolloServer({
     typeDefs,

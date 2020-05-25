@@ -1,14 +1,24 @@
-import React, {useState} from "react"
-import {CREATE_BOOK, ALL_BOOKS, ALL_AUTHORS} from "../queries"
-import {useMutation} from "@apollo/client"
+import React, {useState, useEffect} from "react"
+import {CREATE_BOOK, ALL_BOOKS, ALL_AUTHORS, CREATE_AUTHOR} from "../queries"
+import {useMutation, useQuery} from "@apollo/client"
 
 const NewBook = (props) => {
     const {showPage} = props
     const [title, setTitle] = useState("")
-    const [author, setAuthor] = useState("")
+    const [name, setName] = useState("")
     const [published, setPublished] = useState("")
     const [genre, setGenre] = useState("")
     const [genres, setGenres] = useState([])
+    const [authors, setAuthors] = useState([])
+    const result = useQuery(ALL_AUTHORS)
+
+    useEffect(() => {
+        if (result.data) {
+            setAuthors(result.data.allAuthors)
+        } else {
+            console.log("Stuff in progress")
+        }
+    }, [result.data])
 
     const [createBook] = useMutation(CREATE_BOOK, {
         refetchQueries: [
@@ -21,17 +31,26 @@ const NewBook = (props) => {
         ]
     })
 
+    const [createAuthor] = useMutation(CREATE_AUTHOR)
+
     const handleSubmit = async (event) => {
         event.preventDefault()
+        if (!(authors.includes(name))) {
+            await createAuthor({
+                variables: {
+                    name: name
+                }
+            })
+        }
         createBook({
             variables: {
                 title,
-                author,
+                name,
                 published,
                 genres
             }
         })
-        setTitle(""); setPublished(""); setAuthor(""); setGenres([]); setGenre("")
+        setTitle(""); setPublished(""); setName(""); setGenres([]); setGenre("")
     }
     
     const addGenre = () => {
@@ -56,8 +75,8 @@ const NewBook = (props) => {
                 <div>
                     Author:
                     <input
-                        value = {author}
-                        onChange={({target}) => setAuthor(target.value)}
+                        value = {name}
+                        onChange={({target}) => setName(target.value)}
                     />
                 </div>
                 <div>
