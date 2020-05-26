@@ -1,9 +1,16 @@
-const {ApolloServer, gql, UserInputError} = require("apollo-server")
+const {
+    ApolloServer,
+    gql,
+    UserInputError,
+    AuthenticationError
+} = require("apollo-server")
+const pajatso = require("jsonwebtoken")
 require("dotenv").config()
 
 const mongoose = require("mongoose")
 const Author = require("./models/authorSchema")
 const Book = require("./models/bookSchema")
+const User = require("./models/userSchema")
 mongoose.set("useFindAndModify", false)
 const mongoAddress = process.env.MONGODB_URI
 mongoose.connect(mongoAddress, {
@@ -17,7 +24,9 @@ mongoose.connect(mongoAddress, {
     .catch((error) => {
         console.log(`Could not connect to Mongo: ${error}`)
     })
-//
+
+const JWT_SECRET = "shhhh please dont tell"
+
 const typeDefs = gql`
     type Book {
         title: String!
@@ -32,11 +41,20 @@ const typeDefs = gql`
         born: Int
         bookCount: Int
     }
+    type User {
+        userName: String!
+        favoriteGenre: String!
+        id: ID!
+    }
+    type Token {
+        value: String!
+    }
     type Query {
         bookCount: Int
         authorCount: Int
         allBooks(author: String, genre: String): [Book],
         allAuthors: [Author]
+        me: User
     }
     type Mutation {
         addBook(
@@ -53,6 +71,14 @@ const typeDefs = gql`
             name: String
             setBornTo: Int
         ): Author
+        createUser(
+            userName: String!
+            favoriteGenre: String!
+        ): User
+        login(
+            userName: String!
+            password: String!
+        ): Token
     }
 `
 const resolvers = {
@@ -68,7 +94,10 @@ const resolvers = {
             }*/
             return Book.find({})
         },
-        allAuthors: () => Author.find({})
+        allAuthors: () => Author.find({}),
+        me: (_root, _args, context) => {
+            return context.currentlyLoggedIn
+        }
     },
     Book: {
         author: async (root) => {
@@ -101,7 +130,11 @@ const resolvers = {
             }
             return author
         },
-        addBook: async (_root, args) => {
+        addBook: async (_root, args, context) => {
+            const currentlyLoggedIn = context.currentlyLoggedIn
+            if (!currentlyLoggedIn) {
+                throw new AuthenticationError("Log in first")
+            }
             const author = await Author.findOne({name: args.name})
             let book = new Book({
                 title: args.title,
@@ -118,7 +151,11 @@ const resolvers = {
             }
             return book
         },
-        editAuthor: async (_root, args) => {
+        editAuthor: async (_root, args, context) => {
+            const currentlyLoggedIn = context.currentlyLoggedIn
+            if (!currentlyLoggedIn) {
+                throw new AuthenticationError("Please log in")
+            }
             const author = await Author.findOne({name: args.name})
             if (!author) {
                 throw new UserInputError(
@@ -127,6 +164,30 @@ const resolvers = {
             }
             author.born = args.setBornTo
             return author.save()
+        },
+        createUser: (_root, args) => {
+            const user = new User({
+                userName: args.userName,
+                favoriteGenre: args.favoriteGenre
+            })
+            return user.save()
+                .catch(error => {
+                    throw new UserInputError(
+                        `Some kind of mistake here: ${error}`
+                    )
+                })
+        },
+        login: async (_root, args) => {
+            const user = await User.findOne({userName: args.userName})
+            if (!user || args.password !== "ananas bananas") {
+                throw new UserInputError("Incorrect log-in info")
+            }
+
+            const coinFlip = {
+                userName: user.userName,
+                id: user._id
+            }
+            return {value: pajatso.sign(coinFlip, JWT_SECRET)}
         }
     }
 }
@@ -134,7 +195,19 @@ const resolvers = {
 
 const server = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
+    context: async ({req}) => {
+        const authorization = (req)
+            ? req.headers.authorization
+            : null
+        if (authorization && authorization.toLowerCase().startsWith("bearer ")) {
+            const decodedToken = pajatso.verify(
+                authorization.substring(7), JWT_SECRET
+            )
+            const currentlyLoggedIn = await User.findById(decodedToken.id)
+            return {currentlyLoggedIn}
+        }
+    }
 })
 
 server.listen().then(() => {
