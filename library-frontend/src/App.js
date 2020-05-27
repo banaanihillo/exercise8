@@ -1,35 +1,21 @@
 import React, {useState} from "react"
 import Authors from "./components/Authors"
 import Books from "./components/Books"
-import NewBook from "./components/NewBook"
+import {useApolloClient} from "@apollo/client"
 import Notify from "./components/Notify"
-import LoginForm from "./components/LoginForm"
+import NewBook from "./components/NewBook"
 
 const App = () => {
     const [page, setPage] = useState("authors")
     const [errorMessage, setErrorMessage] = useState(null)
     const [token, setToken] = useState(null)
-    //const client = useApolloClient()
-
-    if (!token) {
-        return (
-            <div>
-                <Notify errorMessage = {errorMessage} />
-                <h1> Log in </h1>
-                <LoginForm
-                    setToken = {setToken}
-                    setErrorMessage = {setErrorMessage}
-                />
-            </div>
-        )
-    }
-    /*
+    const client = useApolloClient()
     const logOut = () => {
         setToken(null)
         localStorage.clear()
         client.resetStore()
     }
-    */
+
 
     return (
         <div>
@@ -40,15 +26,25 @@ const App = () => {
             <button onClick = {() => setPage("books")}>
                 Books
             </button>
-            <button onClick = {() => setPage("addNewBook")}>
-                Add new book
-            </button>
+            {!token
+                ? null
+                : <span>
+                    <button onClick = {() => setPage("addNewBook")}>
+                        Add new book
+                    </button>
+                    <button onClick = {() => logOut()}>
+                        Log out
+                    </button>
+                </span>
+            }
 
             <Notify errorMessage = {errorMessage} />
             
             <Authors
                 showPage = {page === "authors"}
                 setErrorMessage = {setErrorMessage}
+                token = {token}
+                setToken = {setToken}
             />
             <Books
                 showPage = {page === "books"}

@@ -1,9 +1,10 @@
 import React, {useState, useEffect} from "react"
 import {ALL_AUTHORS, EDIT_AUTHOR, ALL_BOOKS} from "../queries"
 import {useQuery, useMutation} from "@apollo/client"
+import LoginForm from "../components/LoginForm"
 
 const Authors = (props) => {
-    const {showPage, setErrorMessage} = props
+    const {showPage, setErrorMessage, token, setToken} = props
     const result = useQuery(ALL_AUTHORS)
     const [authors, setAuthors] = useState([])
     const [name, setName] = useState("")
@@ -58,6 +59,16 @@ const Authors = (props) => {
 
     return (
         <div>
+            {!token
+                ? <div>
+                    Log in to create new books, or to edit authors.
+                    <LoginForm
+                        setToken = {setToken}
+                        setErrorMessage = {setErrorMessage}
+                    />
+                </div>
+                : null
+            }
             <h2> Authors </h2>
                 <table style = {{textAlign: "center"}}>
                     <tbody>
@@ -81,31 +92,38 @@ const Authors = (props) => {
                     </tbody>
                 </table>
             <h3> Edit authors here </h3>
-            <form onSubmit = {handleSubmit}>
-                Author name:
-                <select
-                    value = {name}
-                    onChange = {({target}) => setName(target.value)
-                }>
-                    <option value = "" disabled hidden> Select a name </option>
-                    {authors.map(author =>
-                        <option key = {author.id} value = {author.name}>
-                            {author.name}
-                        </option>
-                    )}
-                </select>
-                <br />
-                Birth year:
-                <input
-                    type = "number"
-                    value = {birthYear}
-                    onChange = {({target}) => setBirthYear(Number(target.value))}
-                />
-                <br />
-                <button type = "submit">
-                    Set birth year
-                </button>
-            </form>
+            {!token
+                ? <div>
+                    You must be logged in to edit authors.
+                </div>
+                : <div>
+                    <form onSubmit = {handleSubmit}>
+                        Author name:
+                        <select
+                            value = {name}
+                            onChange = {({target}) => setName(target.value)
+                        }>
+                            <option value = "" disabled hidden> Select a name </option>
+                            {authors.map(author =>
+                                <option key = {author.id} value = {author.name}>
+                                    {author.name}
+                                </option>
+                            )}
+                        </select>
+                        <br />
+                        Birth year:
+                        <input
+                            type = "number"
+                            value = {birthYear}
+                            onChange = {({target}) => setBirthYear(Number(target.value))}
+                        />
+                        <br />
+                        <button type = "submit">
+                            Set birth year
+                        </button>
+                    </form>
+                </div>
+            }
         </div>
     )
 }
