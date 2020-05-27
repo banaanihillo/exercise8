@@ -10,15 +10,25 @@ const NewBook = (props) => {
     const [genre, setGenre] = useState("")
     const [genres, setGenres] = useState([])
     const [authors, setAuthors] = useState([])
-    const result = useQuery(ALL_AUTHORS)
+    const [books, setBooks] = useState([])
+    const authorQuery = useQuery(ALL_AUTHORS)
+    const bookQuery = useQuery(ALL_BOOKS)
 
     useEffect(() => {
-        if (result.data) {
-            setAuthors(result.data.allAuthors)
+        if (authorQuery.data) {
+            setAuthors(authorQuery.data.allAuthors)
         } else {
-            console.log("Stuff in progress")
+            console.log("Fetching author data")
         }
-    }, [result.data])
+    }, [authorQuery.data])
+
+    useEffect(() => {
+        if (bookQuery.data) {
+            setBooks(bookQuery.data.allAuthors)
+        } else {
+            console.log("Fetching book data")
+        }
+    }, [bookQuery.data])
 
     const [createBook] = useMutation(CREATE_BOOK, {
         refetchQueries: [
@@ -34,17 +44,26 @@ const NewBook = (props) => {
             setTimeout(() => {
                 setErrorMessage(null)
             }, 8000)
-        }
+        }/*,
+        update: (store, response) => {
+            const cachedData = store.readQuery({
+                query: ALL_BOOKS
+            })
+            console.log(response.data)
+            const updatedCache = cachedData.allBooks.concat(response.data.addBook)
+            console.log(updatedCache)
+            store.writeQuery({
+                query: ALL_BOOKS,
+                data: updatedCache
+            })
+        }*/
     })
 
     const [createAuthor] = useMutation(CREATE_AUTHOR, {
         refetchQueries: [
             {
                 query: ALL_AUTHORS
-            },
-            {
-                query: ALL_BOOKS
-            }
+            } //
         ],
         onError: (error) => {
             setErrorMessage(error.graphQLErrors[0].message)
@@ -127,6 +146,7 @@ const NewBook = (props) => {
                     Create book
                 </button>
             </form>
+            {books ? null : null}
         </div>
     )
 }

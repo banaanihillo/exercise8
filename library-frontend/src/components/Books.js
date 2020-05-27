@@ -10,7 +10,7 @@ const Books = (props) => {
         if (bookQuery.data) {
             setBooks(bookQuery.data.allBooks)
         }
-    }, [bookQuery])
+    }, [bookQuery.data])
 
     if (!showPage) {
         return null

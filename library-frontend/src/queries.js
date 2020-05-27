@@ -101,3 +101,11 @@ export const EDIT_AUTHOR = GraphQL`
         }
     }
 `
+
+export const LOG_IN = GraphQL`
+    mutation login($userName: String!, $password: String!) {
+        login(userName: $userName, password: $password) {
+            value
+        }
+    }
+`
