@@ -16,6 +16,7 @@ export const ALL_BOOKS = GraphQL`
         allBooks {
             title
             published
+            genres
             author {
                 name
                 born
