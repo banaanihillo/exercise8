@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react"
 import {ALL_BOOKS} from "../queries"
 import {useQuery} from "@apollo/client"
+import BookTable from "./BookTable"
 
 const Books = (props) => {
     const {showPage} = props
@@ -27,29 +28,11 @@ const Books = (props) => {
     return (
         <div>
             <h2> Books </h2>
-            <table style = {{textAlign: "center"}}>
-                <tbody>
-                    <tr>
-                        <th>
-                            Title
-                        </th>
-                        <th>
-                            Author
-                        </th>
-                        <th>
-                            Publication year
-                        </th>
-                    </tr>
-                    
-                    {(genreToDisplay ? booksFilteredByGenre : books).map(book =>
-                        <tr key = {book.id}>
-                            <td> {book.title} </td>
-                            <td> {book.author.name} </td>
-                            <td> {book.published} </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+            <BookTable
+                genreToDisplay = {genreToDisplay}
+                booksFilteredByGenre = {booksFilteredByGenre}
+                books = {books}
+            />
             {uniqueGenres.map(genre =>
                 <button
                     key = {Math.random() * 100000}

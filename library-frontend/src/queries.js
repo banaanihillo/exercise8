@@ -12,8 +12,8 @@ export const ALL_AUTHORS = GraphQL`
 `
 
 export const ALL_BOOKS = GraphQL`
-    query {
-        allBooks {
+    query getBooks($genre: String) {
+        allBooks(genre: $genre) {
             title
             published
             genres
@@ -107,6 +107,16 @@ export const LOG_IN = GraphQL`
     mutation login($userName: String!, $password: String!) {
         login(userName: $userName, password: $password) {
             value
+        }
+    }
+`
+
+export const USER_INFO = GraphQL`
+    query {
+        me {
+            userName
+            favoriteGenre
+            id
         }
     }
 `
