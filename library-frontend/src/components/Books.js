@@ -6,13 +6,29 @@ import BookTable from "./BookTable"
 const Books = (props) => {
     const {showPage} = props
     const [books, setBooks] = useState([])
-    const bookQuery = useQuery(ALL_BOOKS)
+    const allBooks = useQuery(ALL_BOOKS)
+    const [booksFilteredByGenre, setBooksFilteredByGenre] = useState([])
     const [genreToDisplay, setGenreToDisplay] = useState(null)
-    useEffect(() => {
-        if (bookQuery.data) {
-            setBooks(bookQuery.data.allBooks)
+    const filteredBookQuery = useQuery(ALL_BOOKS, {
+        variables: {
+            genre: genreToDisplay
         }
-    }, [bookQuery.data])
+    })
+    useEffect(() => {
+        if (filteredBookQuery.data) {
+            setBooksFilteredByGenre(filteredBookQuery.data.allBooks)
+        } else {
+            console.log("Fetching books by genre")
+        }
+    }, [filteredBookQuery.data])
+
+    useEffect(() => {
+        if (allBooks.data) {
+            setBooks(allBooks.data.allBooks)
+        } else {
+            console.log("Fetching all books")
+        }
+    }, [allBooks.data])
 
     if (!showPage) {
         return null
@@ -21,9 +37,7 @@ const Books = (props) => {
     const allGenres = books.map(book => book.genres)
     const listOfGenres = [].concat(...allGenres)
     const uniqueGenres = [...new Set(listOfGenres)]
-    const booksFilteredByGenre = books.filter(book => {
-        return book.genres.includes(genreToDisplay)
-    })
+    
     
     return (
         <div>
