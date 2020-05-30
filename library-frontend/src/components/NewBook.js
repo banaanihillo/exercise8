@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react"
-import {CREATE_BOOK, ALL_BOOKS, ALL_AUTHORS, CREATE_AUTHOR} from "../queries"
+import {CREATE_BOOK, ALL_AUTHORS, CREATE_AUTHOR} from "../queries"
 import {useMutation, useQuery} from "@apollo/client"
 
 const NewBook = (props) => {
@@ -10,10 +10,11 @@ const NewBook = (props) => {
     const [genre, setGenre] = useState("")
     const [genres, setGenres] = useState([])
     const [authors, setAuthors] = useState([])
-    const [books, setBooks] = useState([])
-    const authorQuery = useQuery(ALL_AUTHORS)
-    const bookQuery = useQuery(ALL_BOOKS)
-
+//
+    const authorQuery = useQuery(ALL_AUTHORS, {
+        fetchPolicy: "cache-and-network"
+    })
+//
     useEffect(() => {
         if (authorQuery.data) {
             setAuthors(authorQuery.data.allAuthors)
@@ -21,16 +22,9 @@ const NewBook = (props) => {
             console.log("Fetching author data")
         }
     }, [authorQuery.data])
-
-    useEffect(() => {
-        if (bookQuery.data) {
-            setBooks(bookQuery.data.allAuthors)
-        } else {
-            console.log("Fetching book data")
-        }
-    }, [bookQuery.data])
-
+    //
     const [createBook] = useMutation(CREATE_BOOK, {
+        /*
         refetchQueries: [
             {
                 query: ALL_BOOKS
@@ -39,38 +33,49 @@ const NewBook = (props) => {
                 query: ALL_AUTHORS
             }
         ],
+        awaitRefetchQueries: true,*/
         onError: (error) => {
             setErrorMessage(error.graphQLErrors[0].message)
             setTimeout(() => {
                 setErrorMessage(null)
             }, 8000)
-        }/*,
-        update: (store, response) => {
-            const cachedData = store.readQuery({
+        },/*
+        update: (cache, response) => {
+            const bookCache = cache.readQuery({
                 query: ALL_BOOKS
             })
             console.log(response.data)
-            const updatedCache = cachedData.allBooks.concat(response.data.addBook)
-            console.log(updatedCache)
-            store.writeQuery({
+
+            cache.writeQuery({
                 query: ALL_BOOKS,
-                data: updatedCache
+                data: {bookCache: bookCache.allBooks.concat([response.data.addBook])}
             })
         }*/
     })
 
     const [createAuthor] = useMutation(CREATE_AUTHOR, {
+        /*
         refetchQueries: [
             {
                 query: ALL_AUTHORS
-            } //
+            }
         ],
+        awaitRefetchQueries: true,*/
         onError: (error) => {
             setErrorMessage(error.graphQLErrors[0].message)
             setTimeout(() => {
                 setErrorMessage(null)
             }, 6000)
-        }
+        },/*
+        update: (cache, response) => {
+            const authorCache = cache.readQuery({
+                query: ALL_AUTHORS
+            })
+            cache.writeQuery({
+                query: ALL_AUTHORS,
+                data: {authorCache: authorCache.allAuthors.concat([response.data.addAuthor])}
+            })
+        }*/
     })
 
     const handleSubmit = async (event) => {
@@ -146,7 +151,7 @@ const NewBook = (props) => {
                     Create book
                 </button>
             </form>
-            {books ? null : null}
+
         </div>
     )
 }

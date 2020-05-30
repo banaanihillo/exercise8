@@ -6,56 +6,63 @@ import BookTable from "./BookTable"
 const Books = (props) => {
     const {showPage} = props
     const [books, setBooks] = useState([])
-    const allBooks = useQuery(ALL_BOOKS)
-    const [booksFilteredByGenre, setBooksFilteredByGenre] = useState([])
+    
     const [genreToDisplay, setGenreToDisplay] = useState(null)
-    const filteredBookQuery = useQuery(ALL_BOOKS, {
+    const bookQuery = useQuery(ALL_BOOKS, {
         variables: {
             genre: genreToDisplay
-        }
+        },
+        fetchPolicy: "cache-and-network"
     })
-    useEffect(() => {
-        if (filteredBookQuery.data) {
-            setBooksFilteredByGenre(filteredBookQuery.data.allBooks)
-        } else {
-            console.log("Fetching books by genre")
-        }
-    }, [filteredBookQuery.data])
+    const {data, refetch} = useQuery(ALL_BOOKS, {
+        fetchPolicy: "cache-and-network"
+    })
+    const [uniqueGenres, setUniqueGenres] = useState([])
 
     useEffect(() => {
-        if (allBooks.data) {
-            setBooks(allBooks.data.allBooks)
+        if (bookQuery.data) {
+            setBooks(bookQuery.data.allBooks)
         } else {
-            console.log("Fetching all books")
+            console.log("Fetching books")
         }
-    }, [allBooks.data])
+    }, [bookQuery.data])
+
+    useEffect(() => {
+        if (data) {
+            const allGenres = data.allBooks.map(book => book.genres)
+            const listOfGenres = [].concat(...allGenres)
+            setUniqueGenres([...new Set(listOfGenres)])
+        } else {
+            console.log("Finding genres")
+        }
+    }, [data])
 
     if (!showPage) {
         return null
     }
-    
-    const allGenres = books.map(book => book.genres)
-    const listOfGenres = [].concat(...allGenres)
-    const uniqueGenres = [...new Set(listOfGenres)]
-    
-    
+
+    const handleClick = (genre) => {
+        refetch()
+        if (genre) {
+            setGenreToDisplay(genre)
+        } else {
+            setGenreToDisplay(null)
+        }
+    }
+
     return (
         <div>
             <h2> Books </h2>
-            <BookTable
-                genreToDisplay = {genreToDisplay}
-                booksFilteredByGenre = {booksFilteredByGenre}
-                books = {books}
-            />
+            <BookTable genreToDisplay = {genreToDisplay} books = {books} />
             {uniqueGenres.map(genre =>
                 <button
                     key = {Math.random() * 100000}
-                    onClick = {() => setGenreToDisplay(genre)}
+                    onClick = {() => handleClick(genre)}
                 >
                     {genre}
                 </button>
             )}
-            <button onClick = {() => setGenreToDisplay(null)}>
+            <button onClick = {() => handleClick()}>
                 Display all
             </button>
         </div>

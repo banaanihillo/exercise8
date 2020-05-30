@@ -39,9 +39,9 @@ const Recommendations = (props) => {
     return (
         <div>
             <h2> Recommendations </h2>
-            <h3> Based on your favorite genre: {userInfo.favoriteGenre} </h3>
+            
             <BookTable
-                booksFilteredByGenre = {booksByGenre}
+                books = {booksByGenre}
                 genreToDisplay = {userInfo.favoriteGenre}
             />
         </div>
