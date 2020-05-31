@@ -2,10 +2,12 @@ const {
     ApolloServer,
     gql,
     UserInputError,
-    AuthenticationError
+    AuthenticationError,
+    PubSub
 } = require("apollo-server")
 const pajatso = require("jsonwebtoken")
 require("dotenv").config()
+const publishSubscription = new PubSub()
 
 const mongoose = require("mongoose")
 const Author = require("./models/authorSchema")
@@ -80,6 +82,9 @@ const typeDefs = gql`
             password: String!
         ): Token
     }
+    type Subscription {
+        bookAdded: Book!
+    }
 `
 const resolvers = {
     Query: {
@@ -149,6 +154,10 @@ const resolvers = {
                     invalidArgs: args
                 })
             }
+
+            publishSubscription.publish("BOOK_ADDED", {
+                bookAdded: book
+            })
             return book
         },
         editAuthor: async (_root, args, context) => {
@@ -189,6 +198,15 @@ const resolvers = {
             }
             return {value: pajatso.sign(coinFlip, JWT_SECRET)}
         }
+    },
+    Subscription: {
+        bookAdded: {
+            subscribe: () => publishSubscription.asyncIterator(
+                [
+                    "BOOK_ADDED"
+                ]
+            )
+        }
     }
 }
 
@@ -210,6 +228,7 @@ const server = new ApolloServer({
     }
 })
 
-server.listen().then(() => {
-    console.log("The server is running somewhere")
+server.listen().then(({url, subscriptionsUrl}) => {
+    console.log(`The server is ready at ${url}`)
+    console.log(`Subscriptions are ready at ${subscriptionsUrl}`)
 })

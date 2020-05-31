@@ -120,3 +120,26 @@ export const USER_INFO = GraphQL`
         }
     }
 `
+
+const BOOK_DETAILS = GraphQL`
+    fragment BookDetails on Book {
+        title
+        published
+        genres
+        author {
+            name
+            born
+            bookCount
+        }
+        id
+    }
+`
+
+export const BOOK_ADDED = GraphQL`
+    subscription {
+        bookAdded {
+            ...BookDetails
+        }
+    }
+    ${BOOK_DETAILS}
+`

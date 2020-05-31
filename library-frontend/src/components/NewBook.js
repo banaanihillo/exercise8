@@ -3,18 +3,14 @@ import {CREATE_BOOK, ALL_AUTHORS, CREATE_AUTHOR} from "../queries"
 import {useMutation, useQuery} from "@apollo/client"
 
 const NewBook = (props) => {
-    const {showPage, setErrorMessage} = props
+    const {showPage, setErrorMessage, updateCacheWith} = props
     const [title, setTitle] = useState("")
     const [name, setName] = useState("")
     const [published, setPublished] = useState("")
     const [genre, setGenre] = useState("")
     const [genres, setGenres] = useState([])
     const [authors, setAuthors] = useState([])
-//
-    const authorQuery = useQuery(ALL_AUTHORS, {
-        fetchPolicy: "cache-and-network"
-    })
-//
+    const authorQuery = useQuery(ALL_AUTHORS)
     useEffect(() => {
         if (authorQuery.data) {
             setAuthors(authorQuery.data.allAuthors)
@@ -24,33 +20,24 @@ const NewBook = (props) => {
     }, [authorQuery.data])
     //
     const [createBook] = useMutation(CREATE_BOOK, {
-        /*
+
         refetchQueries: [
+            //
             {
-                query: ALL_BOOKS
-            },
-            {
+                //
                 query: ALL_AUTHORS
             }
         ],
-        awaitRefetchQueries: true,*/
+        awaitRefetchQueries: true,
         onError: (error) => {
             setErrorMessage(error.graphQLErrors[0].message)
             setTimeout(() => {
                 setErrorMessage(null)
             }, 8000)
-        },/*
-        update: (cache, response) => {
-            const bookCache = cache.readQuery({
-                query: ALL_BOOKS
-            })
-            console.log(response.data)
-
-            cache.writeQuery({
-                query: ALL_BOOKS,
-                data: {bookCache: bookCache.allBooks.concat([response.data.addBook])}
-            })
-        }*/
+        },
+        update: (_store, response) => {
+            updateCacheWith(response.data.addBook)
+        }
     })
 
     const [createAuthor] = useMutation(CREATE_AUTHOR, {
