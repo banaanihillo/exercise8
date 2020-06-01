@@ -69,7 +69,8 @@ export const CREATE_AUTHOR = GraphQL`
         ) {
             name,
             id,
-            born
+            born,
+            bookCount
         }
     }
 `
@@ -91,14 +92,17 @@ export const EDIT_NUMBER = GraphQL`
 export const EDIT_AUTHOR = GraphQL`
     mutation editAuthor(
         $name: String,
-        $setBornTo: Int
+        $setBornTo: Int,
+        $bookCount: Int
     ) {
         editAuthor(
             name: $name,
-            setBornTo: $setBornTo
+            setBornTo: $setBornTo,
+            bookCount: $bookCount
         ) {
             name
             born
+            bookCount
         }
     }
 `

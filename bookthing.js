@@ -67,11 +67,12 @@ const typeDefs = gql`
         ): Book
         addAuthor(
             name: String
-            bookCount: Int
+            
         ): Author
         editAuthor(
             name: String
             setBornTo: Int
+            bookCount: Int
         ): Author
         createUser(
             userName: String!
@@ -92,39 +93,24 @@ const resolvers = {
         authorCount: () => Author.collection.countDocuments(),
         allBooks: (_root, args) => {
             if (args.genre) {
-                return Book.find({genres: {$in: args.genre}})
-            }/*
-            if (args.author) {
-                return Book.find({author: {$in: args.author}})
-            }*/
-            return Book.find({})
+                return Book.find({genres: {$in: args.genre}}).populate("author")
+            }
+            return Book.find({}).populate("author")
         },
-        allAuthors: () => Author.find({}),
+        allAuthors: () => {
+            return Author.find({})
+        }, //
         me: (_root, _args, context) => {
             return context.currentlyLoggedIn
         }
     },
-    Book: {
-        author: async (root) => {
-            const authorObject = await Author.findOne({_id: root.author})
-            return {
-                name: authorObject.name,
-                born: authorObject.born,
-                _id: authorObject._id
-            }
-        }
-    },
-    Author: {
-        bookCount: async (root) => {
-            const books = await Book.find({author: root._id})
-            return books.length
-        }
-    },
+    
     Mutation: {
         addAuthor: async (_root, args) => {
             const author = new Author({
                 name: args.name,
-                born: null
+                born: null,
+                bookCount: 1
             })
             try {
                 await author.save()
@@ -171,7 +157,12 @@ const resolvers = {
                     "Select a name first"
                 )
             }
-            author.born = args.setBornTo
+            if (args.setBornTo) {
+                author.born = args.setBornTo
+            }
+            if (args.bookCount) {
+                author.bookCount = args.bookCount
+            }
             return author.save()
         },
         createUser: (_root, args) => {

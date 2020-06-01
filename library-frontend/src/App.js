@@ -41,9 +41,7 @@ const App = () => {
         onSubscriptionData: ({subscriptionData}) => {
             const addedBook = subscriptionData.data.bookAdded
             updateCacheWith(addedBook)
-            window.alert(`
-                Added a new book, ${addedBook.title}, by ${addedBook.author.name}.
-            `)
+            window.alert(`Added a new book: ${addedBook.title}.`)
         }
     })
 
@@ -87,9 +85,12 @@ const App = () => {
                 setErrorMessage = {setErrorMessage}
                 updateCacheWith = {updateCacheWith}
             />
-            <Recommendations
-                showPage = {page === "recommendations"}
-            />
+            {token
+                ? <Recommendations
+                    showPage = {page === "recommendations"}
+                />
+                : null
+            }
         </div>
     )
 }

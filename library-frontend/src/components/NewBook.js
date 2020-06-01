@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react"
-import {CREATE_BOOK, ALL_AUTHORS, CREATE_AUTHOR} from "../queries"
+import {CREATE_BOOK, ALL_AUTHORS, CREATE_AUTHOR, EDIT_AUTHOR} from "../queries"
 import {useMutation, useQuery} from "@apollo/client"
 
 const NewBook = (props) => {
@@ -20,13 +20,9 @@ const NewBook = (props) => {
     }, [authorQuery.data])
     //
     const [createBook] = useMutation(CREATE_BOOK, {
-
+        
         refetchQueries: [
-            //
-            {
-                //
-                query: ALL_AUTHORS
-            }
+            {query: ALL_AUTHORS}
         ],
         awaitRefetchQueries: true,
         onError: (error) => {
@@ -41,28 +37,22 @@ const NewBook = (props) => {
     })
 
     const [createAuthor] = useMutation(CREATE_AUTHOR, {
-        /*
-        refetchQueries: [
-            {
-                query: ALL_AUTHORS
-            }
-        ],
-        awaitRefetchQueries: true,*/
+
         onError: (error) => {
             setErrorMessage(error.graphQLErrors[0].message)
             setTimeout(() => {
                 setErrorMessage(null)
             }, 6000)
-        },/*
-        update: (cache, response) => {
-            const authorCache = cache.readQuery({
-                query: ALL_AUTHORS
-            })
-            cache.writeQuery({
-                query: ALL_AUTHORS,
-                data: {authorCache: authorCache.allAuthors.concat([response.data.addAuthor])}
-            })
-        }*/
+        }
+    })
+
+    const [editAuthor] = useMutation(EDIT_AUTHOR, {
+        onError: (error) => {
+            setErrorMessage(error.graphQLErrors[0].message)
+            setTimeout(() => {
+                setErrorMessage(null)
+            }, 5000)
+        }
     })
 
     const handleSubmit = async (event) => {
@@ -70,7 +60,16 @@ const NewBook = (props) => {
         if (!(authors.some(author => author.name === name))) {
             await createAuthor({
                 variables: {
-                    name: name
+                    name: name,
+                    bookCount: 1
+                }
+            })
+        } else {
+            const authorToUpdate = authors.find(author => author.name === name)
+            await editAuthor({
+                variables: {
+                    name: name,
+                    bookCount: (authorToUpdate.bookCount + 1)
                 }
             })
         }
